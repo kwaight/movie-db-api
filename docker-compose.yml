@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+    app:
+        container_name: movie_db_nginx
+        build:
+            context: docker/app
+            dockerfile: Dockerfile
+        environment:
+            VIRTUAL_HOST: "${APP_DOMAIN}"
+            VIRTUAL_PROTO: "fastcgi"
+            VIRTUAL_ROOT: "/app/public"
+            XDEBUG_MODE: "${XDEBUG_MODE}"
+        volumes:
+            - "./:/app"
+            - "./docker/app/php.ini:/usr/local/etc/php/php.ini"
+            - "./docker/app/www.conf:/usr/local/etc/php-fpm.d/www.conf"
+            - "./docker/app/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini"
+        working_dir: /app
+        command: "php-fpm"
+        ports:
+            - 9000
+    proxy:
+        image: nginx
+        container_name: movie_db_proxy
+        depends_on:
+            - app
+            - dockergen
+        ports:
+            - 80:80
+        volumes:
+            - nginx:/etc/nginx/conf.d
+            - ./docker/proxy:/etc/nginx/vhost.d:ro
+            - ./public:/app/public:ro
+    dockergen:
+        image: jwilder/docker-gen
+        container_name: movie_db_dockergen
+        command: -notify-sighup proxy -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+        volumes:
+            - nginx:/etc/nginx/conf.d
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./docker/proxy:/etc/nginx/vhost.d:ro
+            - ./docker/proxy/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+volumes:
+    nginx: {}

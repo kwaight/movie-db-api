@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'movie-db' => [
+        'key' => env('MOVIE_DB_API_KEY'),
+        'base-uri' => env('MOVIE_DB_API_URI'),
+        'image-base-url' => env('MOVIE_DB_IMAGE_URL'),
+        'link-url' => env('MOVIE_DB_LINK_URL'),
+    ]
+
 ];
